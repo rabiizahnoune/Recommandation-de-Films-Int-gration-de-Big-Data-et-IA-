@@ -1,0 +1,80 @@
+
+services:
+  spark-master:
+    build:
+      context: ./spark_jobs
+      dockerfile: Dockerfile
+    container_name: spark-master
+    ports:
+      - '7077:7077'
+      - '8080:8080'
+    environment:
+      - SPARK_MODE=master
+    volumes:
+      - ./data:/opt/spark-data
+      - ./spark_jobs:/opt/spark_jobs  # Ajout ici pour le master
+
+  spark-worker:
+    build:
+      context: ./spark_jobs
+      dockerfile: Dockerfile
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    volumes:
+      - ./data:/opt/spark-data
+      - ./spark_jobs:/opt/spark_jobs
+    ports:
+      - '8081:8081'
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.5.1
+    container_name: kibana
+    ports:
+      - '5601:5601'
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+
+ 
+  backend:
+      build:
+        context: ./backend
+        dockerfile: Dockerfile
+      container_name: backend
+      ports:
+        - "5000:5000"
+      env_file:
+        - ./backend/.env
+      volumes:
+        - ./backend:/app
+  
+      depends_on:
+        - spark-master
+        - elasticsearch
+      environment:
+        - SPARK_MASTER_URL=spark://spark-master:7077
+        - ELASTICSEARCH_URL=http://elasticsearch:9200
+
+volumes:
+  esdata:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

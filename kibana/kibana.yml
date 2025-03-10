@@ -1,0 +1,12 @@
+# Adresse du serveur Kibana
+server.host: "0.0.0.0"
+
+# URL de connexion à Elasticsearch
+elasticsearch.hosts: ["http://localhost:9200"]
+
+# Définir l'authentification si nécessaire
+elasticsearch.username: "elastic"
+elasticsearch.password: "rajarabii1"
+
+# Activer/désactiver l'accès à la fonctionnalité de monitoring
+xpack.monitoring.enabled: false
