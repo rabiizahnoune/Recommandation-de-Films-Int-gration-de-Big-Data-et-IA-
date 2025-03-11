@@ -1,4 +1,3 @@
-
 services:
   spark-master:
     build:
@@ -8,11 +7,13 @@ services:
     ports:
       - '7077:7077'
       - '8080:8080'
+      - '8888:8888'
     environment:
       - SPARK_MODE=master
     volumes:
-      - ./data:/opt/spark-data
-      - ./spark_jobs:/opt/spark_jobs  # Ajout ici pour le master
+      - ./spark_jobs:/opt/spark_jobs
+    networks:
+      - spark-es-network
 
   spark-worker:
     build:
@@ -24,10 +25,11 @@ services:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
     volumes:
-      - ./data:/opt/spark-data
       - ./spark_jobs:/opt/spark_jobs
     ports:
       - '8081:8081'
+    networks:
+      - spark-es-network
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.5.1
@@ -40,6 +42,8 @@ services:
       - '9300:9300'
     volumes:
       - esdata:/usr/share/elasticsearch/data
+    networks:
+      - spark-es-network
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.5.1
@@ -50,31 +54,33 @@ services:
       - elasticsearch
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - spark-es-network
 
- 
   backend:
-      build:
-        context: ./backend
-        dockerfile: Dockerfile
-      container_name: backend
-      ports:
-        - "5000:5000"
-      env_file:
-        - ./backend/.env
-      volumes:
-        - ./backend:/app
-  
-      depends_on:
-        - spark-master
-        - elasticsearch
-      environment:
-        - SPARK_MASTER_URL=spark://spark-master:7077
-        - ELASTICSEARCH_URL=http://elasticsearch:9200
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - spark-master
+      - elasticsearch
+    environment:
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    networks:
+      - spark-es-network
 
 volumes:
   esdata:
     driver: local
 
 networks:
-  default:
+  spark-es-network:
     driver: bridge

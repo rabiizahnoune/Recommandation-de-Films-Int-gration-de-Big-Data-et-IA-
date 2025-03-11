@@ -1,0 +1,1 @@
+docker exec -it recommandationdefilms-spark-worker-1 spark-submit --master spark://spark-master:7077 /opt/spark_jobs/data_preprocessing.py
