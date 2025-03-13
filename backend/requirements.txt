@@ -1,4 +1,7 @@
-fastapi==0.110.0
-uvicorn==0.29.0
-elasticsearch==8.12.0
-python-dotenv==1.0.1
+flask
+elasticsearch
+python-dotenv
+joblib
+pandas
+numpy
+scikit-learn

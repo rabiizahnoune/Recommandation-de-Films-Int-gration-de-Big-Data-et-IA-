@@ -1,3 +1,5 @@
 pyspark==3.5.0
 elasticsearch==8.12.0
 papermill
+scikit-learn
+pandas

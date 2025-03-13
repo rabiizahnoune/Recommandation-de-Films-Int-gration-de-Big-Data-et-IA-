@@ -68,6 +68,7 @@ services:
       - ./backend/.env
     volumes:
       - ./backend:/app
+      - ./spark_jobs:/opt/spark_jobs
     depends_on:
       - spark-master
       - elasticsearch
